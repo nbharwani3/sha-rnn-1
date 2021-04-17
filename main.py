@@ -297,9 +297,9 @@ def train(epoch=0):
         if batch % loss_every_n_batches == 0:
             loss = functools.reduce(lambda x, y: x + y, losses)
             #print(losses)
-            #loss.backward()
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+            loss.backward()
+            # with amp.scale_loss(loss, optimizer) as scaled_loss:
+            #     scaled_loss.backward()
 
             # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
             if args.clip: torch.nn.utils.clip_grad_norm_(params, args.clip)
@@ -370,8 +370,8 @@ try:
         print('Lookahead - k {} and alpha {}'.format(k, alpha))
         optimizer = Lookahead(base_optimizer=optimizer, k=k, alpha=alpha)
 
-    from apex import amp
-    model, optimizer = amp.initialize(model, optimizer, opt_level='O1')
+    # from apex import amp
+    # model, optimizer = amp.initialize(model, optimizer, opt_level='O1')
     #model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
 
     for epoch in range(1, args.epochs+1):
