@@ -162,7 +162,7 @@ class Block(nn.Module):
         self.attn = None
         if use_attn:
             self.attn = Attention(embed_dim, heads=heads, r=False, dropout=dropout)
-        self.ff = Boom(embed_dim, hidden_dim, dropout=dropout, shortcut=True)
+        self.ff = Boom(embed_dim, hidden_dim, dropout=dropout, shortcut=False)
         self.lnstart = LayerNorm(embed_dim, eps=1e-12)
         self.lnmid = LayerNorm(embed_dim, eps=1e-12)
         self.lnmem = LayerNorm(embed_dim, eps=1e-12)
@@ -340,7 +340,7 @@ class GELU(nn.Module):
 
 class Boom(nn.Module):
 
-    def __init__(self, d_model, dim_feedforward=2048, dropout=0.1, shortcut=False):
+    def __init__(self, d_model, dim_feedforward=1024, dropout=0.1, shortcut=False):
         super(Boom, self).__init__()
         self.linear1 = nn.Linear(d_model, dim_feedforward)
         self.dropout = nn.Dropout(dropout) if dropout else None
