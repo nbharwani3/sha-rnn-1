@@ -323,21 +323,6 @@ class SHARNN(nn.Module):
             return h, new_hidden, new_mems, None, None
         return h, new_hidden, new_mems
 
-class GELU(nn.Module):
-    """
-    Paper Section 3.4, last paragraph notice that BERT used the GELU instead of RELU
-    """
-    def forward(self, x):
-        #return torch.nn.functional.gelu(x.float())
-        # The first approximation has more operations than the second
-        # See https://arxiv.org/abs/1606.08415
-        #return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
-        return x * torch.sigmoid(1.702 * x)
-
-#@torch.jit.script
-#def GELU(x):
-#    return x * torch.sigmoid(1.702 * x)
-
 class Boom(nn.Module):
 
     def __init__(self, d_model, dim_feedforward=2048, dropout=0.1, shortcut=False):
@@ -347,9 +332,7 @@ class Boom(nn.Module):
         if not shortcut:
             self.linear2 = nn.Linear(dim_feedforward, d_model)
         self.shortcut = shortcut
-        #self.act = nn.ReLU()
-        self.act = GELU()
-        #self.act = nn.Tanh()
+        self.act = nn.ReLU()
 
     def forward(self, input):
         x = self.act(self.linear1(input))
