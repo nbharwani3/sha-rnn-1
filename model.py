@@ -162,7 +162,6 @@ class Block(nn.Module):
         self.attn = None
         if use_attn:
             self.attn = Attention(embed_dim, heads=heads, r=False, dropout=dropout)
-        self.ff = Boom(embed_dim, hidden_dim, dropout=dropout, shortcut=True)
         self.lnstart = LayerNorm(embed_dim, eps=1e-12)
         self.lnmid = LayerNorm(embed_dim, eps=1e-12)
         self.lnmem = LayerNorm(embed_dim, eps=1e-12)
@@ -215,13 +214,6 @@ class Block(nn.Module):
 
             x, focus = checkpoint(self.attn, q, k, bigh, attn_mask)
             #x, focus = tcheckpoint(self.attn, q, k, bigh, attn_mask)
-            x = self.drop(x)
-            h = x + h
-
-        if self.ff:
-            h, x = self.lnff(h), self.lnxff(h)
-            x = checkpoint(self.ff, x)
-            #x = tcheckpoint(self.ff, h)
             x = self.drop(x)
             h = x + h
 
@@ -337,33 +329,3 @@ class GELU(nn.Module):
 #@torch.jit.script
 #def GELU(x):
 #    return x * torch.sigmoid(1.702 * x)
-
-class Boom(nn.Module):
-
-    def __init__(self, d_model, dim_feedforward=2048, dropout=0.1, shortcut=False):
-        super(Boom, self).__init__()
-        self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.dropout = nn.Dropout(dropout) if dropout else None
-        if not shortcut:
-            self.linear2 = nn.Linear(dim_feedforward, d_model)
-        self.shortcut = shortcut
-        #self.act = nn.ReLU()
-        self.act = GELU()
-        #self.act = nn.Tanh()
-
-    def forward(self, input):
-        x = self.act(self.linear1(input))
-        if self.dropout: x = self.dropout(x)
-        if self.shortcut:
-            # Trim the end off if the size is different
-            ninp = input.shape[-1]
-            x = torch.narrow(x, -1, 0, x.shape[-1] // ninp * ninp)
-            # Divide the hidden size evenly into chunks
-            x = x.view(*x.shape[:-1], x.shape[-1] // ninp, ninp)
-            # Collapse the chunks through summation
-            #h = h + self.drop(x).sum(dim=-2)
-            z = x.sum(dim=-2)
-        else:
-            z = self.linear2(x)
-
-        return z
