@@ -1,3 +1,5 @@
+# Citation: https://github.com/Smerity/sha-rnn
+
 import math
 import random
 
